@@ -39,7 +39,7 @@ static double *read_doubles(mat_t *f, const char *name, size_t *len) {
   return x;
 }
 
-int read_graph(const char *base, graph_t *W) {
+int read_graph(const char *base, graph_t *G) {
   mat_t *f = open_mat(base, "");
   if (!f) return -1;
   matvar_t *v = Mat_VarRead(f, "A");
@@ -47,20 +47,20 @@ int read_graph(const char *base, graph_t *W) {
     fprintf(stderr, "%s: A is not a real sparse matrix\n", base);
     Mat_Close(f); return -1;
   }
-  mat_sparse_t *s = v->data;
-  W->n = (int64_t)v->dims[1];
-  W->nnz = (int64_t)s->jc[W->n];
-  W->colptr = malloc((W->n + 1) * sizeof(int64_t));
-  W->row = malloc(W->nnz * sizeof(int64_t));
-  W->val = malloc(W->nnz * sizeof(double));
-  for (int64_t j = 0; j <= W->n; j++) W->colptr[j] = s->jc[j];
-  for (int64_t k = 0; k < W->nnz; k++) W->row[k] = s->ir[k];
-  memcpy(W->val, s->data, W->nnz * sizeof(double));
+  mat_sparse_t *s = v->data;  // matvar is essentially a tagged union.
+  G->W.n = (int64_t)v->dims[1];
+  G->W.nnz = (int64_t)s->jc[G->W.n];
+  G->W.colptr = malloc((G->W.n + 1) * sizeof(int64_t));
+  G->W.row = malloc(G->W.nnz * sizeof(int64_t));
+  G->W.val = malloc(G->W.nnz * sizeof(double));
+  for (int64_t j = 0; j <= G->W.n; j++) G->W.colptr[j] = s->jc[j];
+  for (int64_t k = 0; k < G->W.nnz; k++) G->W.row[k] = s->ir[k];
+  memcpy(G->W.val, s->data, G->W.nnz * sizeof(double));
   Mat_VarFree(v);
   size_t len;
   double *lab = read_doubles(f, "label", &len);
-  W->label = malloc(W->n * sizeof(int64_t));
-  for (int64_t i = 0; i < W->n; i++) W->label[i] = lab ? (int64_t)lab[i] : 0;
+  G->label = malloc(G->W.n * sizeof(int64_t));
+  for (int64_t i = 0; i < G->W.n; i++) G->label[i] = lab ? (int64_t)lab[i] : 0;
   free(lab);
   Mat_Close(f);
   return 0;
@@ -93,6 +93,6 @@ int read_ref(const char *base, ref_t *R) {
   return 0;
 }
 
-void free_graph(graph_t *W) {
-  free(W->colptr); free(W->row); free(W->val); free(W->label);
+void free_graph(graph_t *G) {
+  free(G->W.colptr); free(G->W.row); free(G->W.val); free(G->label);
 }

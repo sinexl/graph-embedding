@@ -14,12 +14,20 @@
 #define HW1_DATA_H
 #include <stdint.h>
 
+// For m * n sparse matrix with nnz non-zero elements,
+// non-zero elements are stored in val[i] [0 <= i < nnz].
+// val[i] is at row row[i] [0 <= i < nnz]
+// colptr[i] gives index in val where column i starts
 typedef struct {
-  int64_t n, nnz;
-  int64_t *colptr;   /* n + 1 */
-  int64_t *row;      /* nnz   */
-  double  *val;      /* nnz   */
-  int64_t *label;    /* n, for pictures only (0: none) */
+    int64_t n, nnz;    // amount of elements and nonzero elements
+    int64_t *colptr;   /* n + 1 */
+    int64_t *row;      /* nnz   */
+    double  *val;      /* nnz   */
+} SparseMatrix;
+
+typedef struct {
+    SparseMatrix W;  // Adjacency matrix.
+    int64_t *label;    /* n, for pictures only (0: none) */
 } graph_t;
 
 typedef struct { int64_t n; double *Y0; double u, theta; } state_t;
